@@ -1,65 +1,45 @@
-# docker-compose.yml
-version: "3.8"
+# docker-compose.yml (ส่วนของ N8N Service)
 
 services:
-  # 1. Reverse Proxy (Caddy: จัดการ Routing และ SSL/HTTPS)
-  caddy:
-    image: caddy:latest
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      # Caddyfile: การตั้งค่า Reverse Proxy
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      # เก็บ SSL Certificate และ Config
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - nextjs_n8n_network
-
-  # 2. Next.js Application
-  nextjs_app:
-    build:
-      context: ./path/to/your/nextjs/project # *** แก้ไข Path ไปยังโฟลเดอร์ Next.js ของคุณ ***
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      # ENV Variables สำหรับ Next.js
-      - PORT=3000
-      - NEXT_PUBLIC_N8N_WEBHOOK=https://n8n.myapp.com/webhook/xxx # ตัวอย่าง
-      # ... LINE_CLIENT_ID, LINE_CLIENT_SECRET
-    networks:
-      - nextjs_n8n_network
-    # Next.js จะเปิดพอร์ต 3000 ภายใน Container
-
-  # 3. N8N Automation Platform
+  # N8N Automation Service
   n8n:
     image: n8nio/n8n:latest
     restart: always
+    # ENV_FILE สามารถใช้เพื่อเก็บข้อมูลสำคัญ เช่น N8N_HOST, LINE_TOKEN
+    env_file:
+      - stack.env # ใช้ไฟล์เดียวกับ Next.js หรือใช้ไฟล์แยกได้
     environment:
-      # ENV Variables สำหรับ n8n
-      - N8N_HOST=n8n.myapp.com # *** แก้ไขเป็น Subdomain สำหรับ n8n ของคุณ ***
+      # กำหนด URL ภายนอกเพื่อให้ n8n สร้าง Webhook URL ที่ถูกต้อง
+      # *** แก้ไขโดเมนตามที่คุณใช้งานจริง ***
+      - N8N_HOST=n8n.yourdomain.com
+      - WEBHOOK_URL=https://n8n.yourdomain.com/
       - N8N_PORT=5678
-      - WEBHOOK_URL=https://n8n.myapp.com/
-      - VUE_APP_URL_BASE_API=https://n8n.myapp.com/
       - NODE_ENV=production
-      # - N8N_EMAIL_AUTH_USER=... (ถ้าใช้ Email สำหรับ Login)
-      - N8N_BASIC_AUTH_ACTIVE=true # แนะนำให้เปิดใช้งาน Basic Auth
+      # แนะนำให้เปิดใช้งาน Basic Auth เพื่อเข้าถึง UI ของ n8n
+      - N8N_BASIC_AUTH_ACTIVE=true
       - N8N_BASIC_AUTH_USER=admin
       - N8N_BASIC_AUTH_PASSWORD=admin # *** เปลี่ยนรหัสผ่าน ***
-      # ... LINE_CHANNEL_ACCESS_TOKEN, LINE_CHANNEL_SECRET (สำหรับ Node LINE)
-    volumes:
-      - n8n_data:/home/node/.n8n # เก็บข้อมูล, Workflows, Credentials
-    networks:
-      - nextjs_n8n_network
-    # n8n จะเปิดพอร์ต 5678 ภายใน Container
+      # ... ตัวแปรอื่น ๆ เช่น Database URL (ถ้าใช้ External DB)
 
+    # *** การจัดการพอร์ตเพื่อป้องกันชนกันและเพื่อความปลอดภัย ***
+    # เราใช้ 'expose' แทน 'ports' เพื่อไม่เปิดพอร์ต 5678 ออกสู่ Host OS โดยตรง
+    # ทำให้ Kong/Reverse Proxy ในเครือข่าย 'kong-net' เท่านั้นที่ติดต่อกับ n8n ได้
+    expose:
+      - 5678
+
+    volumes:
+      # เก็บข้อมูล Workflows, Credentials, และ Log
+      - n8n_data:/home/node/.n8n
+
+    networks:
+      - default # ใช้ Network ชื่อ default ซึ่ง map กับ kong-net
+
+# ******************************************************************************
+# ส่วนนี้ต้องอยู่ท้ายไฟล์เสมอเพื่อเชื่อมต่อเข้ากับ Kong Network
 networks:
-  nextjs_n8n_network:
-    driver: bridge
+  default:
+    name: kong-net
+    external: true
 
 volumes:
   n8n_data:
-  caddy_data:
-  caddy_config:
