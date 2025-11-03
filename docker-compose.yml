@@ -31,8 +31,8 @@ services:
       # เก็บข้อมูล Workflows, Credentials, และ Log
       - n8n_data:/home/node/.n8n
 
-    networks:
-      - default # ใช้ Network ชื่อ default ซึ่ง map กับ kong-net
+    # networks:
+    #   - default # ใช้ Network ชื่อ default ซึ่ง map กับ kong-net
 
 # ******************************************************************************
 # ส่วนนี้ต้องอยู่ท้ายไฟล์เสมอเพื่อเชื่อมต่อเข้ากับ Kong Network
