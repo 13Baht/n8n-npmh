@@ -13,7 +13,7 @@ services:
       # *** แก้ไขโดเมนตามที่คุณใช้งานจริง ***
       - N8N_HOST=npmh.moph.go.th
       - WEBHOOK_URL=https://npmh.moph.go.th/
-      - N8N_PATH=/n8n
+      - N8N_PATH=/
       - N8N_PORT=5678
       - NODE_ENV=production
       # แนะนำให้เปิดใช้งาน Basic Auth เพื่อเข้าถึง UI ของ n8n
