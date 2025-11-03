@@ -12,8 +12,8 @@ services:
       # กำหนด URL ภายนอกเพื่อให้ n8n สร้าง Webhook URL ที่ถูกต้อง
       # *** แก้ไขโดเมนตามที่คุณใช้งานจริง ***
       - N8N_HOST=npmh.moph.go.th
-      - WEBHOOK_URL=https://npmh.moph.go.th/n8n/
-      - N8N_PATH=/n8n
+      - WEBHOOK_URL=https://npmh.moph.go.th/n8n
+      - N8N_PATH=n8n
       - N8N_PORT=5678
       - NODE_ENV=production
       # แนะนำให้เปิดใช้งาน Basic Auth เพื่อเข้าถึง UI ของ n8n
