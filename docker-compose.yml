@@ -1,0 +1,65 @@
+# docker-compose.yml
+version: "3.8"
+
+services:
+  # 1. Reverse Proxy (Caddy: จัดการ Routing และ SSL/HTTPS)
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Caddyfile: การตั้งค่า Reverse Proxy
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      # เก็บ SSL Certificate และ Config
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - nextjs_n8n_network
+
+  # 2. Next.js Application
+  nextjs_app:
+    build:
+      context: ./path/to/your/nextjs/project # *** แก้ไข Path ไปยังโฟลเดอร์ Next.js ของคุณ ***
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      # ENV Variables สำหรับ Next.js
+      - PORT=3000
+      - NEXT_PUBLIC_N8N_WEBHOOK=https://n8n.myapp.com/webhook/xxx # ตัวอย่าง
+      # ... LINE_CLIENT_ID, LINE_CLIENT_SECRET
+    networks:
+      - nextjs_n8n_network
+    # Next.js จะเปิดพอร์ต 3000 ภายใน Container
+
+  # 3. N8N Automation Platform
+  n8n:
+    image: n8nio/n8n:latest
+    restart: always
+    environment:
+      # ENV Variables สำหรับ n8n
+      - N8N_HOST=n8n.myapp.com # *** แก้ไขเป็น Subdomain สำหรับ n8n ของคุณ ***
+      - N8N_PORT=5678
+      - WEBHOOK_URL=https://n8n.myapp.com/
+      - VUE_APP_URL_BASE_API=https://n8n.myapp.com/
+      - NODE_ENV=production
+      # - N8N_EMAIL_AUTH_USER=... (ถ้าใช้ Email สำหรับ Login)
+      - N8N_BASIC_AUTH_ACTIVE=true # แนะนำให้เปิดใช้งาน Basic Auth
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin # *** เปลี่ยนรหัสผ่าน ***
+      # ... LINE_CHANNEL_ACCESS_TOKEN, LINE_CHANNEL_SECRET (สำหรับ Node LINE)
+    volumes:
+      - n8n_data:/home/node/.n8n # เก็บข้อมูล, Workflows, Credentials
+    networks:
+      - nextjs_n8n_network
+    # n8n จะเปิดพอร์ต 5678 ภายใน Container
+
+networks:
+  nextjs_n8n_network:
+    driver: bridge
+
+volumes:
+  n8n_data:
+  caddy_data:
+  caddy_config:
