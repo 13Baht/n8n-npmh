@@ -19,8 +19,10 @@ services:
       - N8N_TELEMETRY_ENABLED=false
       # แนะนำให้เปิดใช้งาน Basic Auth เพื่อเข้าถึง UI ของ n8n
       - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=admin # *** เปลี่ยนรหัสผ่าน ***
+      - GENERIC_TIMEZONE=Asia/Bangkok
+      - TZ=Asia/Bangkok
+      #- N8N_BASIC_AUTH_USER=admin
+      #- N8N_BASIC_AUTH_PASSWORD=admin # *** เปลี่ยนรหัสผ่าน ***
       # ... ตัวแปรอื่น ๆ เช่น Database URL (ถ้าใช้ External DB)
 
     # *** การจัดการพอร์ตเพื่อป้องกันชนกันและเพื่อความปลอดภัย ***
